@@ -105,7 +105,7 @@ function enterGame() {
 
 // Hàm liên hệ người bán
 function contactSeller() {
-    alert("Liên hệ người bán qua email: seller@example.com");
+    alert("Liên hệ người bán qua Zalo: 0325575642");
 }
 
 // Hàm hiển thị game Free Fire Max
