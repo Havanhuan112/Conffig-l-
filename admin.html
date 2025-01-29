@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang quản lý Admin</title>
+</head>
+<body>
+    <h1>Quản lý người dùng</h1>
+    <ul>
+        {% for user in users %}
+            <li>{{ user.username }} - {{ user.id }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
