@@ -1,13 +1,559 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang chủ</title>
+  <meta charset="UTF-8">
+  <!-- Meta viewport để hiển thị trên thiết bị di động -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Shophuanha.Online</title>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <!-- Firebase App, Auth & Database (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style>
+    body {
+      background-color: #EEEEEE;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    h2, h3 {
+      text-align: center;
+    }
+    /* Tab Navigation */
+    .admin-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .admin-tab {
+      padding: 10px 20px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .admin-tab.active {
+      background-color: #00bfff;
+      color: #fff;
+      border-color: #00bfff;
+    }
+    /* Admin Content */
+    .admin-content {
+      display: none;
+    }
+    .admin-content.active {
+      display: block;
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .admin-table th, .admin-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    .admin-table th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+    /* Ô tìm kiếm */
+    .search-container {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .search-container input {
+      padding: 8px;
+      width: 50%;
+      max-width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    /* Nút hành động */
+    .action-btn {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      margin: 2px;
+      font-size: 12px;
+      transition: background-color 0.3s;
+    }
+    .add-money-btn {
+      background-color: #28a745;
+      color: #fff;
+    }
+    .add-money-btn:hover {
+      background-color: #218838;
+    }
+    .reset-balance-btn {
+      background-color: #ffc107;
+      color: #fff;
+    }
+    .reset-balance-btn:hover {
+      background-color: #e0a800;
+    }
+    .toggle-order {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      background-color: #00bfff;
+      color: #fff;
+      transition: background-color 0.3s;
+    }
+    .toggle-order:hover {
+      background-color: #009acd;
+    }
+  </style>
 </head>
 <body>
-    <h1>Chào mừng đến với website</h1>
-    <a href="{{ url_for('register') }}">Đăng ký</a>
-    <a href="{{ url_for('login') }}">Đăng nhập</a>
+  <h2>Admin Panel - Shophuanha.Online</h2>
+  <!-- Tab Navigation -->
+  <div class="admin-tabs">
+    <div class="admin-tab active" data-target="admin-users">Tài Khoản</div>
+    <div class="admin-tab" data-target="admin-deposits">Nạp Tiền</div>
+    <div class="admin-tab" data-target="admin-purchases">Mua Hàng</div>
+    <div class="admin-tab" data-target="admin-orders">Đơn Hàng</div>
+    <div class="admin-tab" data-target="admin-notifications">Thông Báo</div>
+  </div>
+  
+  <!-- Tab Contents -->
+  <!-- 1. Quản lý Tài Khoản Người Dùng -->
+  <div id="admin-users" class="admin-content active">
+    <h3>Quản lý Tài Khoản Người Dùng</h3>
+    <div class="search-container">
+      <input type="text" id="search-users" placeholder="Tìm kiếm theo User ID">
+    </div>
+    <table class="admin-table" id="admin-users-table">
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Email</th>
+          <th>Tên Tài Khoản</th>
+          <th>Ngày Tạo</th>
+          <th>Số Dư</th>
+          <th>Số Lần Nạp</th>
+          <th>Cộng Tiền</th>
+          <th>Reset Số Dư</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dữ liệu tài khoản được load từ Firebase -->
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- 2. Quản lý Giao Dịch Nạp Tiền -->
+  <div id="admin-deposits" class="admin-content">
+    <h3>Quản lý Giao Dịch Nạp Tiền</h3>
+    <div class="search-container">
+      <input type="text" id="search-deposits" placeholder="Tìm kiếm theo User ID">
+    </div>
+    <table class="admin-table" id="admin-deposits-table">
+      <thead>
+        <tr>
+          <th>ID Giao Dịch</th>
+          <th>User ID</th>
+          <th>Số Tiền</th>
+          <th>Phương Thức</th>
+          <th>Thời Gian</th>
+          <th>Chi Tiết</th>
+          <th>Trạng Thái</th>
+          <th>Hành Động</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dữ liệu giao dịch nạp tiền được load từ Firebase -->
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- 3. Quản lý Lịch Sử Mua Hàng -->
+  <div id="admin-purchases" class="admin-content">
+    <h3>Quản lý Lịch Sử Mua Hàng</h3>
+    <div class="search-container">
+      <input type="text" id="search-purchases" placeholder="Tìm kiếm theo User ID">
+    </div>
+    <table class="admin-table" id="admin-purchases-table">
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>ID Đơn Hàng</th>
+          <th>Tên Đơn Hàng</th>
+          <th>Số Tiền</th>
+          <th>Thời Gian</th>
+          <th>Link Tải</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dữ liệu lịch sử mua hàng được load từ Firebase -->
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- 4. Quản lý Đơn Hàng -->
+  <div id="admin-orders" class="admin-content">
+    <h3>Quản lý Đơn Hàng</h3>
+    <table class="admin-table" id="admin-orders-table">
+      <thead>
+        <tr>
+          <th>ID Đơn Hàng</th>
+          <th>Tên Đơn Hàng</th>
+          <th>Giá</th>
+          <th>Trạng Thái</th>
+          <th>Chỉnh Sửa</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dữ liệu đơn hàng được load từ Firebase -->
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- 5. Gửi Thông Báo -->
+  <div id="admin-notifications" class="admin-content">
+    <h3>Gửi Thông Báo Đến Người Dùng</h3>
+    <div style="text-align: center; margin-bottom: 10px;">
+      <input type="text" id="notify-userid" placeholder="Nhập User ID của người dùng" style="padding: 8px; width: 50%; max-width:300px;">
+    </div>
+    <div style="text-align: center; margin-bottom: 10px;">
+      <textarea id="notify-message" placeholder="Nhập nội dung thông báo" rows="4" style="padding: 8px; width: 50%; max-width:300px;"></textarea>
+    </div>
+    <div style="text-align: center;">
+      <button id="btn-enable-notify" class="action-btn add-money-btn">Bật Thông Báo</button>
+      <button id="btn-disable-notify" class="action-btn reset-balance-btn">Tắt Thông Báo</button>
+    </div>
+  </div>
+
+  <!-- JavaScript cho Admin Panel -->
+  <script>
+    // Cấu hình Firebase – dùng cùng cấu hình như file người dùng
+    const firebaseConfig = {
+      apiKey: "AIzaSyDOmiqgHxPApJzZ3vDFmOdjLn7phjIO7LQ",
+      authDomain: "huanhaios.firebaseapp.com",
+      databaseURL: "https://huanhaios-default-rtdb.firebaseio.com",
+      projectId: "huanhaios",
+      storageBucket: "huanhaios.firebasestorage.app",
+      messagingSenderId: "861580662476",
+      appId: "1:861580662476:web:27c0272fec2c9db8f95469",
+      measurementId: "G-D3Y6THJ8FB"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    /* ------------------- Format Balance ------------------- */
+    function formatBalance(amount) {
+      return Number(amount).toLocaleString('vi-VN') + "₫";
+    }
+
+    /* ------------------- Load Admin Users ------------------- */
+    function loadAdminUsers() {
+      const tbody = document.querySelector('#admin-users-table tbody');
+      tbody.innerHTML = "";
+      database.ref('users').once('value').then(snapshot => {
+        snapshot.forEach(childSnap => {
+          const data = childSnap.val();
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${childSnap.key}</td>
+            <td>${data.email}</td>
+            <td>${data.username || ""}</td>
+            <td>${new Date(data.creationTime || Date.now()).toLocaleString('vi-VN')}</td>
+            <td>${formatBalance(data.balance || 0)}</td>
+            <td>${data.depositCount || 0}</td>
+            <td><button class="action-btn add-money-btn" data-uid="${childSnap.key}">Cộng tiền</button></td>
+            <td><button class="action-btn reset-balance-btn" data-uid="${childSnap.key}">Reset</button></td>
+          `;
+          tbody.appendChild(row);
+        });
+        // Sự kiện Cộng tiền
+        document.querySelectorAll('.add-money-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const uid = this.getAttribute('data-uid');
+            Swal.fire({
+              title: 'Cộng tiền',
+              input: 'number',
+              inputLabel: 'Nhập số tiền cần cộng',
+              inputPlaceholder: 'Số tiền',
+              showCancelButton: true
+            }).then(result => {
+              if(result.isConfirmed && result.value > 0) {
+                const amountToAdd = parseFloat(result.value);
+                database.ref('users/' + uid).once('value').then(snapshot => {
+                  const userData = snapshot.val();
+                  const newBalance = parseFloat(userData.balance || 0) + amountToAdd;
+                  return database.ref('users/' + uid).update({ balance: newBalance });
+                }).then(() => {
+                  Swal.fire('Thành công', 'Số tiền đã được cộng vào tài khoản!', 'success');
+                  loadAdminUsers();
+                }).catch(error => {
+                  Swal.fire('Lỗi', error.message, 'error');
+                });
+              }
+            });
+          });
+        });
+        // Sự kiện Reset số dư
+        document.querySelectorAll('.reset-balance-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const uid = this.getAttribute('data-uid');
+            Swal.fire({
+              title: 'Reset số dư',
+              text: 'Bạn có chắc muốn reset số dư về 0?',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Có, reset',
+              cancelButtonText: 'Không'
+            }).then(result => {
+              if(result.isConfirmed) {
+                database.ref('users/' + uid).update({ balance: 0 }).then(() => {
+                  Swal.fire('Thành công', 'Số dư của người dùng đã được reset về 0.', 'success');
+                  loadAdminUsers();
+                }).catch(error => {
+                  Swal.fire('Lỗi', error.message, 'error');
+                });
+              }
+            });
+          });
+        });
+      });
+    }
+
+    /* ------------------- Load Admin Deposits ------------------- */
+    function loadAdminDeposits() {
+      const tbody = document.querySelector('#admin-deposits-table tbody');
+      tbody.innerHTML = "";
+      Promise.all([
+        database.ref('deposits/bank').once('value'),
+        database.ref('deposits/card').once('value')
+      ]).then(results => {
+        results.forEach(snapshot => {
+          snapshot.forEach(childSnap => {
+            const data = childSnap.val();
+            let extraInfo = "";
+            if(snapshot.key === "bank") {
+              extraInfo = "Nội dung: " + (data.transferContent || "");
+            } else {
+              extraInfo = `Loại: ${data.cardType || ""}<br>Mã: ${data.code || ""}<br>Serial: ${data.serial || ""}`;
+            }
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${childSnap.key}</td>
+              <td>${data.uid}</td>
+              <td>${formatBalance(data.amount)}</td>
+              <td>${snapshot.key === 'bank' ? 'Ngân hàng' : 'Thẻ cào'}</td>
+              <td>${new Date(data.timestamp).toLocaleString('vi-VN')}</td>
+              <td>${extraInfo}</td>
+              <td>${data.status ? 'Đã xác nhận' : 'Chờ xác nhận'}</td>
+              <td>${data.status ? '' : '<button class="action-btn toggle-deposit-btn" data-deposit-id="' + childSnap.key + '" data-type="' + snapshot.key + '" data-uid="' + data.uid + '">Duyệt</button>'}</td>
+            `;
+            tbody.appendChild(row);
+          });
+        });
+        document.querySelectorAll('.toggle-deposit-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const depositId = this.getAttribute('data-deposit-id');
+            const type = this.getAttribute('data-type');
+            const uid = this.getAttribute('data-uid');
+            database.ref(`deposits/${type}/${depositId}`).once('value').then(snapshot => {
+              const depositData = snapshot.val();
+              if(depositData.status) {
+                Swal.fire('Thông báo', 'Giao dịch này đã được duyệt.', 'info');
+                return;
+              }
+              Swal.fire({
+                title: 'Duyệt giao dịch',
+                text: 'Bạn có chắc muốn duyệt giao dịch này?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Duyệt',
+                cancelButtonText: 'Hủy'
+              }).then(result => {
+                if(result.isConfirmed) {
+                  database.ref('users/' + uid).once('value').then(snapshot => {
+                    const userData = snapshot.val();
+                    const newBalance = parseFloat(userData.balance || 0) + parseFloat(depositData.amount);
+                    return database.ref('users/' + uid).update({ balance: newBalance });
+                  }).then(() => {
+                    return database.ref(`deposits/${type}/${depositId}`).update({ status: true, processed: true });
+                  }).then(() => {
+                    Swal.fire('Thành công', 'Giao dịch đã được duyệt và số tiền đã được cộng vào tài khoản.', 'success');
+                    loadAdminDeposits();
+                  }).catch(error => {
+                    Swal.fire('Lỗi', error.message, 'error');
+                  });
+                }
+              });
+            });
+          });
+        });
+      });
+    }
+
+    /* ------------------- Load Admin Purchases ------------------- */
+    function loadAdminPurchases() {
+      const tbody = document.querySelector('#admin-purchases-table tbody');
+      tbody.innerHTML = "";
+      database.ref('purchases').once('value').then(snapshot => {
+        snapshot.forEach(userSnap => {
+          const uid = userSnap.key;
+          userSnap.forEach(childSnap => {
+            const data = childSnap.val();
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${uid}</td>
+              <td>${childSnap.key}</td>
+              <td>${data.name}</td>
+              <td>${formatBalance(data.price)}</td>
+              <td>${new Date(data.timestamp).toLocaleString('vi-VN')}</td>
+              <td><a href="${data.downloadLink}" target="_blank" class="download-btn"><i class="fa-solid fa-download"></i> Tải File</a></td>
+            `;
+            tbody.appendChild(row);
+          });
+        });
+      });
+    }
+
+    /* ------------------- Load Admin Orders ------------------- */
+    function loadAdminOrders() {
+      const tbody = document.querySelector('#admin-orders-table tbody');
+      tbody.innerHTML = "";
+      database.ref('orders').once('value').then(snapshot => {
+        if(snapshot.exists()) {
+          snapshot.forEach(childSnap => {
+            const data = childSnap.val();
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${childSnap.key}</td>
+              <td>${data.name}</td>
+              <td>${formatBalance(data.price)}</td>
+              <td>${data.active ? 'Hoạt động' : 'Hết hàng'}</td>
+              <td><button class="toggle-order" data-order-id="${childSnap.key}">${data.active ? 'Đánh dấu hết hàng' : 'Đánh dấu hoạt động'}</button></td>
+            `;
+            tbody.appendChild(row);
+          });
+        } else {
+          alert("Chưa có dữ liệu đơn hàng trên Firebase.");
+        }
+        document.querySelectorAll('.toggle-order').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            database.ref('orders/' + orderId).once('value').then(snapshot => {
+              const data = snapshot.val();
+              const newStatus = !data.active;
+              database.ref('orders/' + orderId).update({ active: newStatus }).then(() => {
+                Swal.fire({ icon: 'success', title: 'Thành công', text: 'Trạng thái đơn hàng đã được cập nhật.' });
+                loadAdminOrders();
+              });
+            });
+          });
+        });
+      });
+    }
+
+    /* ------------------- Gửi Thông Báo ------------------- */
+    function sendNotification() {
+      const uid = document.getElementById('notify-userid').value.trim();
+      const message = document.getElementById('notify-message').value.trim();
+      if(uid === "") {
+        Swal.fire('Lỗi', 'Vui lòng nhập User ID của người dùng cần gửi thông báo!', 'error');
+        return;
+      }
+      if(message === "") {
+        Swal.fire('Lỗi', 'Vui lòng nhập nội dung thông báo!', 'error');
+        return;
+      }
+      // Cập nhật thông báo cho user tại node notifications/{uid}
+      database.ref('notifications/' + uid).set({
+        message: message,
+        status: true,
+        timestamp: Date.now()
+      }).then(() => {
+        Swal.fire('Thành công', 'Thông báo đã được gửi đến người dùng.', 'success');
+      }).catch(error => {
+        Swal.fire('Lỗi', error.message, 'error');
+      });
+    }
+    function disableNotification() {
+      const uid = document.getElementById('notify-userid').value.trim();
+      if(uid === "") {
+        Swal.fire('Lỗi', 'Vui lòng nhập User ID của người dùng!', 'error');
+        return;
+      }
+      // Đặt thông báo về tắt cho user
+      database.ref('notifications/' + uid).set({
+        message: "",
+        status: false,
+        timestamp: Date.now()
+      }).then(() => {
+        Swal.fire('Thành công', 'Thông báo đã được tắt cho người dùng.', 'success');
+      }).catch(error => {
+        Swal.fire('Lỗi', error.message, 'error');
+      });
+    }
+
+    /* ------------------- Admin Panel Tab Navigation ------------------- */
+    const adminTabs = document.querySelectorAll('.admin-tab');
+    adminTabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        adminTabs.forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        const target = this.getAttribute('data-target');
+        document.querySelectorAll('.admin-content').forEach(content => content.classList.remove('active'));
+        document.getElementById(target).classList.add('active');
+        if(target === 'admin-users') loadAdminUsers();
+        else if(target === 'admin-deposits') loadAdminDeposits();
+        else if(target === 'admin-purchases') loadAdminPurchases();
+        else if(target === 'admin-orders') loadAdminOrders();
+        else if(target === 'admin-notifications') {
+          // Không cần load dữ liệu, chỉ hiển thị form gửi thông báo
+          // Bạn có thể thêm logic load thông báo trước nếu cần
+        }
+      });
+    });
+
+    /* ------------------- Tìm kiếm theo User ID ------------------- */
+    function filterTable(searchInputId, tableId, colIndex) {
+      const input = document.getElementById(searchInputId);
+      const filter = input.value.toUpperCase();
+      const table = document.getElementById(tableId);
+      const trs = table.getElementsByTagName("tr");
+      for (let i = 1; i < trs.length; i++) {
+        const td = trs[i].getElementsByTagName("td")[colIndex];
+        if(td) {
+          const txtValue = td.textContent || td.innerText;
+          trs[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+        }
+      }
+    }
+    document.getElementById("search-users")?.addEventListener("input", function() {
+      filterTable("search-users", "admin-users-table", 0);
+    });
+    document.getElementById("search-deposits")?.addEventListener("input", function() {
+      filterTable("search-deposits", "admin-deposits-table", 1);
+    });
+    document.getElementById("search-purchases")?.addEventListener("input", function() {
+      filterTable("search-purchases", "admin-purchases-table", 0);
+    });
+  </script>
+  
+  <!-- ------------------- Phần Gửi Thông Báo (Tab Thông Báo) ------------------- -->
+  <script>
+    document.getElementById("btn-enable-notify")?.addEventListener("click", function() {
+      sendNotification();
+    });
+    document.getElementById("btn-disable-notify")?.addEventListener("click", function() {
+      disableNotification();
+    });
+  </script>
 </body>
 </html>
